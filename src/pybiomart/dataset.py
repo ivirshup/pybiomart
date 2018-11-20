@@ -161,30 +161,20 @@ class Dataset(ServerBase):
         return filters, attributes
 
     def _fetch_filters(self):
-        response = self.get(type="filters", dataset=self._name)
+        columns = ['name', 'description', 'options', 'fullDescription',
+                   'filters', 'type', 'operation', 'tableConstraint', 'field']
+        response = self.get(type='filters', dataset=self._name)
 
         # Check response for problems.
-        if 'Problem retrieving configuration' in response.text:
-            raise BiomartException('Failed to retrieve dataset configuration, '
-                                   'check the dataset name and schema.')
-        
+        if 'Problem retrieving' in response.text:
+            raise BiomartException(response.text)
+
         with StringIO(response.text) as f:
-            table = pd.read_table(f, header=None)
-        
-        # Set colnames
-        colnames = [f"filter{i}" for i in range(table.shape[1])]
-        colnames[0] = "name"
-        colnames[1] = "description"
-        colnames[2] = "options"
-        colnames[3] = "fullDescription"
-        colnames[4] = "filters"
-        colnames[5] = "type"
-        colnames[6] = "operation"
-        table.columns = colnames
+            table = pd.read_table(f, header=None, names=columns)
 
         filters = {}
         for record in table.itertuples():
-            filters[record.name] = Filter(record.name, record.type, 
+            filters[record.name] = Filter(record.name, record.type,
                                           record.description)
 
         return filters

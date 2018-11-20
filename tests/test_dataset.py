@@ -162,14 +162,14 @@ class TestDatasetLive(object):
 
         assert result.shape[0] > 0
         assert result.shape[1] == 2
-    
-    def test_fetch_filters(self):
 
+    def test_fetch_filters(self):
+        """Fetches up to date filters."""
         dataset = Dataset(
             name='hsapiens_gene_ensembl',
             host='http://www.ensembl.org',
             use_cache=False)
-        print(pybiomart.__file__)
+
         filt = dataset.filters['chromosome_name']
         assert filt.name == 'chromosome_name'
         assert filt.type == 'text'
