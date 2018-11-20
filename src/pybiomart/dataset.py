@@ -88,15 +88,20 @@ class Dataset(ServerBase):
     def filters(self):
         """List of filters available for the dataset."""
         if self._filters is None:
-            self._filters, self._attributes = self._fetch_configuration()
+            self._init_attributes_filters()
         return self._filters
 
     @property
     def attributes(self):
         """List of attributes available for the dataset (cached)."""
         if self._attributes is None:
-            self._filters, self._attributes = self._fetch_configuration()
+            self._init_attributes_filters()
         return self._attributes
+
+    def _init_attributes_filters(self):
+        _filters = self._fetch_filters()
+        self._filters, self._attributes = self._fetch_configuration()
+        self._filters.update(_filters)
 
     @property
     def default_attributes(self):
@@ -154,6 +159,35 @@ class Dataset(ServerBase):
         attributes = {a.name: a for a in self._attributes_from_xml(xml)}
 
         return filters, attributes
+
+    def _fetch_filters(self):
+        response = self.get(type="filters", dataset=self._name)
+
+        # Check response for problems.
+        if 'Problem retrieving configuration' in response.text:
+            raise BiomartException('Failed to retrieve dataset configuration, '
+                                   'check the dataset name and schema.')
+        
+        with StringIO(response.text) as f:
+            table = pd.read_table(f, header=None)
+        
+        # Set colnames
+        colnames = [f"filter{i}" for i in range(table.shape[1])]
+        colnames[0] = "name"
+        colnames[1] = "description"
+        colnames[2] = "options"
+        colnames[3] = "fullDescription"
+        colnames[4] = "filters"
+        colnames[5] = "type"
+        colnames[6] = "operation"
+        table.columns = colnames
+
+        filters = {}
+        for record in table.itertuples():
+            filters[record.name] = Filter(record.name, record.type, 
+                                          record.description)
+
+        return filters
 
     @staticmethod
     def _filters_from_xml(xml):
