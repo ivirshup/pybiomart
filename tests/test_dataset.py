@@ -1,5 +1,5 @@
 import pytest
-
+import pybiomart
 from pybiomart import Dataset
 from pybiomart.server import Server
 
@@ -162,3 +162,15 @@ class TestDatasetLive(object):
 
         assert result.shape[0] > 0
         assert result.shape[1] == 2
+    
+    def test_fetch_filters(self):
+
+        dataset = Dataset(
+            name='hsapiens_gene_ensembl',
+            host='http://www.ensembl.org',
+            use_cache=False)
+        print(pybiomart.__file__)
+        filt = dataset.filters['chromosome_name']
+        assert filt.name == 'chromosome_name'
+        assert filt.type == 'text'
+        assert filt.description == 'Chromosome/scaffold name'
