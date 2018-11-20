@@ -1,5 +1,5 @@
 import pytest
-import pybiomart
+
 from pybiomart import Dataset
 from pybiomart.server import Server
 
@@ -36,8 +36,10 @@ class TestDatasetStatic(object):
         assert len(mock_dataset.filters) > 0
         assert len(mock_dataset.attributes) > 0
 
-        mock_get.assert_called_once_with(
-            type='configuration', dataset=mock_dataset.name)
+        mock_get.assert_has_calls([
+            mocker.call(type="configuration", dataset=mock_dataset.name),
+            mocker.call(type="filters", dataset=mock_dataset.name)
+        ], any_order=True)
 
     def test_fetch_attribute(self, mocker, mock_dataset,
                              dataset_config_response):
