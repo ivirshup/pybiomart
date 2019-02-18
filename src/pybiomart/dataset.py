@@ -170,7 +170,7 @@ class Dataset(ServerBase):
             raise BiomartException(response.text)
 
         with StringIO(response.text) as f:
-            table = pd.read_table(f, header=None, names=columns)
+            table = pd.read_csv(f, sep="\t", header=None, names=columns)
 
         filters = {}
         for record in table.itertuples():
